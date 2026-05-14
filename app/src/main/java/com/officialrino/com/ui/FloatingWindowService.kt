@@ -22,6 +22,7 @@ import com.officialrino.com.R
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -32,7 +33,6 @@ class FloatingWindowService : Service() {
     private lateinit var params: WindowManager.LayoutParams
     
     private lateinit var executeButton: Button
-    private lateinit var stopAttackButton: Button
     private lateinit var statusText: TextView
     private lateinit var contentLayout: LinearLayout
     private lateinit var minimizedLayout: View
@@ -40,10 +40,11 @@ class FloatingWindowService : Service() {
     private lateinit var displayPort: TextView
     private lateinit var attackTimeLabel: TextView
     private lateinit var durationSeekBar: SeekBar
+    private lateinit var activeSlotsText: TextView
     
     private var isMinimized = false
     private var selectedDuration = 180
-    private var syncJob: Job? = null
+    private val serviceScope = CoroutineScope(Dispatchers.Main + Job())
     
     private var isSearching = false
 
@@ -79,7 +80,6 @@ class FloatingWindowService : Service() {
 
         // Initialize Views
         executeButton = floatingView.findViewById(R.id.float_execute_button)
-        stopAttackButton = floatingView.findViewById(R.id.float_stop_attack_button)
         statusText = floatingView.findViewById(R.id.float_status_text)
         contentLayout = floatingView.findViewById(R.id.content_layout)
         minimizedLayout = floatingView.findViewById(R.id.minimized_layout)
@@ -88,6 +88,7 @@ class FloatingWindowService : Service() {
         displayPort = floatingView.findViewById(R.id.display_port)
         attackTimeLabel = floatingView.findViewById(R.id.attack_time_label)
         durationSeekBar = floatingView.findViewById(R.id.duration_seekbar)
+        activeSlotsText = floatingView.findViewById(R.id.active_slots_text)
         val btnGetIpPort = floatingView.findViewById<Button>(R.id.btn_get_ip_port)
         val closeButton = floatingView.findViewById<ImageView>(R.id.close_button)
 
@@ -147,6 +148,7 @@ class FloatingWindowService : Service() {
             vibrate(30)
             applyClickAnimation(it)
             toggleMinimize(false)
+            showGlobalToast("WINDOW MAXIMIZED")
         }
 
         executeButton.setOnClickListener {
@@ -179,12 +181,6 @@ class FloatingWindowService : Service() {
             }
         }
 
-        stopAttackButton.setOnClickListener {
-            vibrate(50)
-            applyClickAnimation(it)
-            stopActiveAttack()
-        }
-
         durationSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 val actualDuration = progress * 60
@@ -195,7 +191,9 @@ class FloatingWindowService : Service() {
                 }
             }
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+                showGlobalToast("DURATION SET TO ${selectedDuration}s")
+            }
         })
 
         startSyncLoop()
@@ -237,23 +235,37 @@ class FloatingWindowService : Service() {
         executeButton.text = "LAUNCHING..."
         showGlobalToast("INITIATING ATTACK...")
 
-        CoroutineScope(Dispatchers.IO).launch {
+        serviceScope.launch {
             val result = ApiClient.startAttack(key, ip, port, selectedDuration)
-            withContext(Dispatchers.Main) {
-                executeButton.isEnabled = true
-                executeButton.text = "START ATTACK"
-                if (result.success) {
-                    sharedPrefs.edit()
-                        .putLong("last_attack_time", System.currentTimeMillis())
-                        .putInt("last_attack_duration", selectedDuration)
-                        .apply()
-                    showGlobalToast("🚀 ATTACK SENT SUCCESSFULLY!")
-                    vibrate(100)
-                } else {
-                    showGlobalToast("❌ FAILED: ${result.message}")
+            executeButton.isEnabled = true
+            executeButton.text = "START ATTACK"
+            if (result.success) {
+                sharedPrefs.edit()
+                    .putLong("last_attack_time", System.currentTimeMillis())
+                    .putInt("last_attack_duration", selectedDuration)
+                    .apply()
+                showGlobalToast("🚀 ATTACK SENT SUCCESSFULLY!")
+                vibrate(100)
+            } else {
+                showGlobalToast("❌ FAILED: ${result.message}")
+                if (result.message.contains("Key expired", ignoreCase = true) || result.message.contains("401")) {
+                    performLogout()
                 }
             }
         }
+    }
+
+    private fun performLogout() {
+        val sharedPrefs = getSharedPreferences("OfficialrinoPrefs", Context.MODE_PRIVATE)
+        sharedPrefs.edit().clear().apply()
+        
+        showGlobalToast("❌ KEY EXPIRED. LOGGING OUT...")
+        
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
+        
+        stopSelf()
     }
 
     private fun stopActiveAttack() {
@@ -268,7 +280,7 @@ class FloatingWindowService : Service() {
     }
 
     private fun startSyncLoop() {
-        syncJob = CoroutineScope(Dispatchers.Main).launch {
+        serviceScope.launch {
             while (true) {
                 val ip = NetworkCaptureService.getCapturedIp()
                 val port = NetworkCaptureService.getCapturedPort()
@@ -278,14 +290,23 @@ class FloatingWindowService : Service() {
                 val lastDuration = sharedPrefs.getInt("last_attack_duration", 0)
                 val currentTime = System.currentTimeMillis()
                 val attackEndTime = lastAttackTime + (lastDuration * 1000L)
+                val cooldownEndTime = attackEndTime + (40 * 1000L) // 40 seconds cooldown
                 
                 if (currentTime < attackEndTime) {
-                    // Attack running - don't show countdown, just disable button
                     val remainingSec = (attackEndTime - currentTime) / 1000
-                    // attackTimeLabel stays at selected duration - no countdown
                     
                     executeButton.isEnabled = false
                     executeButton.text = "WAIT ${remainingSec}s"
+                    
+                    if (ip != null && port != null) {
+                        displayIp.text = "IP: $ip"
+                        displayPort.text = "PORT: $port"
+                    }
+                } else if (currentTime < cooldownEndTime) {
+                    val remainingCooldownSec = (cooldownEndTime - currentTime) / 1000
+                    
+                    executeButton.isEnabled = false
+                    executeButton.text = "COOLDOWN ${remainingCooldownSec}s"
                     
                     if (ip != null && port != null) {
                         displayIp.text = "IP: $ip"
@@ -321,6 +342,24 @@ class FloatingWindowService : Service() {
                 kotlinx.coroutines.delay(1000)
             }
         }
+
+        serviceScope.launch {
+            while (true) {
+                try {
+                    val attacksResult = ApiClient.getActiveAttacks()
+                    if (attacksResult.success) {
+                        updateActiveAttacksUI(attacksResult.attacks)
+                    }
+                } catch (e: Exception) {
+                    // Ignore
+                }
+                kotlinx.coroutines.delay(5000)
+            }
+        }
+    }
+
+    private fun updateActiveAttacksUI(attacks: List<ApiClient.ActiveAttack>) {
+        activeSlotsText.text = "ACTIVE SLOTS: ${attacks.size}/6"
     }
 
     private fun showGlobalToast(message: String) {
@@ -354,9 +393,14 @@ class FloatingWindowService : Service() {
 
     override fun onDestroy() {
         super.onDestroy()
-        syncJob?.cancel()
+        serviceScope.cancel()
         if (::floatingView.isInitialized) {
             windowManager.removeView(floatingView)
         }
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        stopSelf()
     }
 }

@@ -1,12 +1,8 @@
 *.iml
 .gradle
 /local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
+.idea/
+.kotlin/
 .DS_Store
 /build
 /captures
@@ -16,3 +12,5 @@ local.properties
 .env
 .env.txt
 *.hprof
+build_log.txt
+build_log_2.txt

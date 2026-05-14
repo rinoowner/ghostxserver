@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/frozen_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:padding="32dp">
+
+        <!-- Left Side: Branding -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <FrameLayout
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/frozen_card_bg"
+                android:backgroundTint="@color/frozen_surface">
+
+                <ImageView
+                    android:id="@+id/logo"
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_gravity="center"
+                    android:src="@drawable/app_logo"
+                    app:tint="@color/frozen_primary" />
+            </FrameLayout>
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Frozen Server"
+                android:textColor="@color/frozen_on_surface"
+                android:textSize="24sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="sans-serif"
+                android:text="Premium Authentication"
+                android:textColor="@color/frozen_on_surface_variant"
+                android:textSize="14sp" />
+        </LinearLayout>
+
+        <!-- Right Side: Login Form -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.2"
+            android:layout_marginStart="32dp"
+            android:background="@drawable/frozen_card_bg"
+            android:orientation="vertical"
+            android:padding="24dp"
+            android:elevation="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-medium"
+                android:text="Activate Device"
+                android:textColor="@color/frozen_on_surface"
+                android:textSize="18sp" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/frozen_input_bg">
+
+                <ImageView
+                    android:id="@+id/key_icon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="16dp"
+                    android:src="@android:drawable/ic_lock_idle_lock"
+                    app:tint="@color/frozen_on_surface_variant" />
+
+                <EditText
+                    android:id="@+id/keyInput"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_toEndOf="@id/key_icon"
+                    android:background="@android:color/transparent"
+                    android:fontFamily="monospace"
+                    android:hint="XXXX-XXXX-XXXX-XXXX"
+                    android:inputType="text"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@color/frozen_on_surface"
+                    android:textColorHint="@color/frozen_outline"
+                    android:textSize="16sp" />
+            </RelativeLayout>
+
+            <android.widget.Button
+                android:id="@+id/loginButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/frozen_button_bg"
+                android:text="VALIDATE DEVICE"
+                android:textColor="@color/white"
+                android:textSize="14sp" />
+
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="12dp"
+                android:visibility="gone"
+                android:indeterminateTint="@color/frozen_primary"/>
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:textColor="@color/frozen_primary"
+                android:textSize="11sp"
+                android:fontFamily="monospace"/>
+
+            <!-- Compatibility IDs -->
+            <TextView android:id="@+id/expiryText" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <android.widget.Button android:id="@+id/continueButton" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <ImageView android:id="@+id/toggleVisibility" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>

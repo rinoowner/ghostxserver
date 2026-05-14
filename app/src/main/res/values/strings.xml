@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">GHOST X SERVER</string>
+    <string name="login_header">GHOST X SERVER</string>
+    <string name="login_subtext">Ghost Network Controller</string>
+    <string name="license_key_label">License Key</string>
+    <string name="btn_validate_device">VALIDATE DEVICE</string>
+
+    <!-- Previous strings for reference/fallback -->
+    <string name="btn_initiate_login">[ INITIATE_LOGIN ]</string>
+    <string name="btn_proceed_dashboard">[ PROCEED_TO_DASHBOARD ]</string>
+    <string name="system_control_header">GHOST X SERVER DASHBOARD</string>
+    <string name="btn_execute_overload">LAUNCH ATTACK</string>
+    <string name="btn_enable_overlay">[ ENABLE_OVERLAY_UI ]</string>
+    <string name="floating_header">[ REMOTE_SHELL ]</string>
+    <string name="contact_admin">// CONTACT_ADMIN_FOR_ACCESS</string>
+    <string name="scan_btn">[ SCAN ]</string>
+    <string name="stop_btn">[ STOP ]</string>
+    <string name="clear_btn">[ CLEAR ]</string>
+    <string name="hint_access_key">ENTER_ACCESS_KEY...</string>
+    <string name="hint_ip">TARGET_IP_ADDR</string>
+    <string name="hint_port">TARGET_PORT</string>
+    <string name="hint_duration">000</string>
+    <string name="attack_duration_label">// ATTACK_DURATION_SEC (1-300)</string>
+    <string name="status_ready">STATUS: READY</string>
+    <string name="floating_scan">SCAN</string>
+    <string name="floating_stop">STOP</string>
+    <string name="floating_clear">CLR</string>
+    <string name="floating_execute">EXECUTE</string>
+    <string name="floating_status">SYS_READY</string>
+</resources>

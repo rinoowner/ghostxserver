@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Officialrino" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
+        <item name="colorPrimary">@color/frozen_primary</item>
+        <item name="colorPrimaryVariant">@color/frozen_primary_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <!-- Secondary brand color. -->
+        <item name="colorSecondary">@color/frozen_secondary</item>
+        <item name="colorSecondaryVariant">@color/frozen_secondary</item>
+        <item name="colorOnSecondary">@color/frozen_background</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">@color/frozen_background</item>
+        <!-- Navigation bar color. -->
+        <item name="android:navigationBarColor">@color/frozen_background</item>
+        <!-- Background color. -->
+        <item name="android:windowBackground">@color/frozen_background</item>
+    </style>
+    <style name="CircleShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+</resources>

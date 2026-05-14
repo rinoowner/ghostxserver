@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/frozen_background"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:padding="24dp">
+
+        <!-- Left Side: Config & Stats -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="sans-serif-black"
+                android:text="FROZEN DDOS"
+                android:textColor="@color/frozen_primary"
+                android:textSize="24sp"
+                android:letterSpacing="-0.02" />
+
+            <!-- Stats Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/frozen_glass_card"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="SLOTS"
+                        android:textColor="@color/frozen_on_surface_variant"
+                        android:textSize="9sp" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0 / 18"
+                        android:textColor="@color/frozen_on_surface"
+                        android:textSize="16sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:background="@drawable/frozen_glass_card"
+                    android:orientation="vertical"
+                    android:padding="12dp">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="sans-serif-medium"
+                        android:text="EXPIRY"
+                        android:textColor="@color/frozen_on_surface_variant"
+                        android:textSize="9sp" />
+                    <TextView
+                        android:id="@+id/license_expiry_date"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="05-16-2026"
+                        android:textColor="@color/frozen_on_surface"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/statusText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:fontFamily="monospace"
+                android:text="SYSTEM ENCRYPTED"
+                android:textColor="@color/frozen_primary"
+                android:textSize="11sp"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <!-- Right Side: Inputs -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1.3"
+            android:layout_marginStart="24dp"
+            android:background="@drawable/frozen_card_bg"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <EditText
+                android:id="@+id/ipInput"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginBottom="12dp"
+                android:background="@drawable/frozen_input_bg"
+                android:fontFamily="monospace"
+                android:hint="Target IP Address"
+                android:paddingStart="16dp"
+                android:textColor="@color/frozen_on_surface"
+                android:textColorHint="@color/frozen_outline"
+                android:textSize="14sp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="12dp"
+                android:orientation="horizontal">
+                <EditText
+                    android:id="@+id/portInput"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/frozen_input_bg"
+                    android:hint="Port"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:textColor="@color/frozen_on_surface"
+                    android:textColorHint="@color/frozen_outline" />
+                <EditText
+                    android:id="@+id/durationInput"
+                    android:layout_width="0dp"
+                    android:layout_height="50dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/frozen_input_bg"
+                    android:hint="Time"
+                    android:gravity="center"
+                    android:inputType="number"
+                    android:textColor="@color/frozen_on_surface"
+                    android:textColorHint="@color/frozen_outline" />
+            </LinearLayout>
+
+            <android.widget.Button
+                android:id="@+id/executeButton"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:background="@drawable/frozen_button_bg"
+                android:text="EXECUTE OVERLOAD"
+                android:textColor="@color/white"
+                android:textSize="14sp"
+                android:layout_marginBottom="12dp"/>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+                <android.widget.Button
+                    android:id="@+id/autofillButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="8dp"
+                    android:background="@drawable/frozen_input_bg"
+                    android:text="AUTOFILL"
+                    android:textColor="@color/frozen_on_surface"
+                    android:textSize="11sp" />
+                <android.widget.Button
+                    android:id="@+id/floatingWindowButton"
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/frozen_input_bg"
+                    android:text="OVERLAY"
+                    android:textColor="@color/frozen_on_surface"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <!-- Compatibility -->
+            <TextView android:id="@+id/cooldownText" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <android.widget.Button android:id="@+id/findIpButton" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <android.widget.Button android:id="@+id/stopSearchButton" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+            <android.widget.Button android:id="@+id/clearDataButton" android:layout_width="0dp" android:layout_height="0dp" android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
