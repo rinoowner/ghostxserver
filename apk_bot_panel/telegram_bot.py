@@ -88,6 +88,35 @@ def parse_duration(duration_str):
         return timedelta(minutes=minutes)
     return None
 
+def parse_extended_duration(duration_str):
+    duration_str = duration_str.lower().strip()
+    parts = duration_str.split()
+    total_timedelta = timedelta()
+    for part in parts:
+        if part.endswith('d'):
+            try:
+                days = int(part[:-1])
+                total_timedelta += timedelta(days=days)
+            except ValueError:
+                return None
+        elif part.endswith('h'):
+            try:
+                hours = int(part[:-1])
+                total_timedelta += timedelta(hours=hours)
+            except ValueError:
+                return None
+        elif part.endswith('m'):
+            try:
+                minutes = int(part[:-1])
+                total_timedelta += timedelta(minutes=minutes)
+            except ValueError:
+                return None
+        else:
+            return None
+    if total_timedelta == timedelta():
+        return None
+    return total_timedelta
+
 def generate_key():
     return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
 
@@ -95,6 +124,12 @@ def format_expiry_ist(timestamp_ms):
     dt = datetime.fromtimestamp(timestamp_ms / 1000)
     dt_ist = dt + timedelta(hours=5, minutes=30)
     return dt_ist.strftime("%Y-%m-%d %H:%M:%S IST")
+
+def get_brand_message(generator_id):
+    admin_data = admins_collection.find_one({"user_id": generator_id})
+    if admin_data:
+        return admin_data.get('brand_message', "")
+    return ""
 
 def revoke_key_from_users(key):
     """Remove key from all users who redeemed it and deactivate their access"""
@@ -162,7 +197,8 @@ def start_cmd(message):
             f"/allkeys - View All Keys\n"
             f"/checkkey [key] - Check Key Devices\n"
             f"/resetkey [key] - Force Logout User\n"
-            f"/deletekey [key] - Delete Your Key\n\n"
+            f"/deletekey [key] - Delete Your Key\n"
+            f"/extend [dur] - Extend ALL Redeemed Keys\n\n"
             f"🗑️ <b>Cleanup Commands:</b>\n"
             f"/delmykeys - Delete Your Keys\n"
             f"/delallkeys - Delete All Keys\n"
@@ -176,6 +212,7 @@ def start_cmd(message):
             f"/setmaxduration [s] - Max Attack Duration\n"
             f"/setcooldown [s] - Attack Cooldown\n"
             f"/viewsettings - View Settings\n"
+            f"/setbrand - Set custom brand message\n"
             f"/broadcast [msg] - Message All Admins\n"
             f"/ip - Show Server IP\n\n"
             f"Use <b>/help</b> anytime to see this menu.", 
@@ -187,7 +224,8 @@ def start_cmd(message):
             f"/gen - Generate Key\n"
             f"/mykeys - View your keys\n"
             f"/mybalance - View balance\n"
-            f"/deletekey KEY - Delete your key\n\n"
+            f"/deletekey KEY - Delete your key\n"
+            f"/setbrand - Set custom brand message\n\n"
             f"Use <b>/help</b> anytime to see this menu.", 
             parse_mode="HTML")
     else:
@@ -809,6 +847,82 @@ def reset_key(message):
     
     bot.reply_to(message, f"🔄 Key <code>{key}</code> has been reset. User logged out.", parse_mode='HTML')
 
+# ========== EXTEND KEY (OWNER ONLY) ==========
+
+@bot.message_handler(commands=['extend'])
+def extend_key(message):
+    user_id = message.from_user.id
+    
+    if not is_owner(user_id):
+        bot.reply_to(message, "❌ Owner only command!")
+        return
+        
+    try:
+        parts = message.text.split(maxsplit=1)
+        if len(parts) < 2:
+            bot.reply_to(message, "📝 **Usage:** `/extend <duration>`\n\n**Examples:**\n`/extend 3h`\n`/extend 1d 45h`\n\nThis will extend ALL redeemed keys.", parse_mode="Markdown")
+            return
+            
+        duration_str = parts[1]
+        
+        duration = parse_extended_duration(duration_str)
+        if not duration:
+            bot.reply_to(message, "❌ Invalid duration format! Use e.g., `3h`, `1d`, `1d 45h`", parse_mode="Markdown")
+            return
+            
+        duration_ms = int(duration.total_seconds() * 1000)
+        
+        # Find all redeemed keys
+        redeemed_keys = list(keys_collection.find({"is_redeemed": 1}))
+        
+        if not redeemed_keys:
+            bot.reply_to(message, "❌ No redeemed keys found to extend!")
+            return
+            
+        extended_keys_count = 0
+        notified_users_count = 0
+        
+        status_msg = bot.reply_to(message, f"⏳ Extending {len(redeemed_keys)} keys...")
+        
+        for key_data in redeemed_keys:
+            key = key_data.get('key')
+            current_expiry = key_data.get('expiry_at', 0)
+            
+            new_expiry = current_expiry + duration_ms
+            
+            keys_collection.update_one(
+                {"key": key},
+                {"$set": {"expiry_at": new_expiry}}
+            )
+            extended_keys_count += 1
+            
+            # Notify users who redeemed it
+            users = users_collection.find({"key": key})
+            for user in users:
+                try:
+                    expiry_readable = format_expiry_ist(new_expiry)
+                    bot.send_message(user["user_id"], 
+                        f"🎉 **Your key `{key}` has been extended by the Owner!**\n\n"
+                        f"⏱️ Added: `{duration_str}`\n"
+                        f"📅 New Expiry: {expiry_readable}",
+                        parse_mode="Markdown")
+                    notified_users_count += 1
+                except:
+                    pass
+                    
+        bot.edit_message_text(
+            f"✅ **Bulk Extension Complete!**\n\n"
+            f"📊 **Keys Extended:** {extended_keys_count}\n"
+            f"🔔 **Users Notified:** {notified_users_count}\n"
+            f"⏱️ **Duration Added:** {duration_str}",
+            chat_id=message.chat.id,
+            message_id=status_msg.message_id,
+            parse_mode="Markdown"
+        )
+            
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error: {str(e)}")
+
 # ========== VIEW ALL KEYS ==========
 
 @bot.message_handler(commands=['allkeys'])
@@ -917,6 +1031,50 @@ def set_balance(message):
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {str(e)}")
 
+@bot.message_handler(commands=['setbrand'])
+def set_brand_message(message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        bot.reply_to(message, "❌ Unauthorized")
+        return
+        
+    parts = message.text.split(maxsplit=1)
+    if len(parts) < 2:
+        help_text = (
+            "📝 **How to set your Custom Brand Message:**\n\n"
+            "Use: `/setbrand <your message>`\n\n"
+            "**Example:**\n"
+            "`/setbrand 🔥 Powered by Mods! Join t.me/ApexMods for deals! 🔥`\n\n"
+            "**How it works:**\n"
+            "When users redeem keys generated by you, they will see this message at the bottom.\n\n"
+            "To view your current brand message, use `/viewbrand`."
+        )
+        bot.reply_to(message, help_text, parse_mode="Markdown")
+        return
+        
+    brand_msg = parts[1]
+    if len(brand_msg) > 200:
+        bot.reply_to(message, "❌ Brand message too long! Max 200 characters.")
+        return
+        
+    admins_collection.update_one(
+        {"user_id": user_id},
+        {"$set": {"brand_message": brand_msg}},
+        upsert=True
+    )
+    bot.reply_to(message, f"✅ **Brand Message Set Successfully!**\n\nYour message:\n`{brand_msg}`", parse_mode="Markdown")
+
+@bot.message_handler(commands=['viewbrand'])
+def view_brand_message(message):
+    user_id = message.from_user.id
+    if not is_admin(user_id):
+        bot.reply_to(message, "❌ Unauthorized")
+        return
+        
+    admin_data = admins_collection.find_one({"user_id": user_id})
+    brand_msg = admin_data.get('brand_message', "No brand message set.") if admin_data else "No brand message set."
+    bot.reply_to(message, f"📋 **Your Current Brand Message:**\n\n`{brand_msg}`", parse_mode="Markdown")
+
 @bot.message_handler(commands=['removeadmin'])
 def remove_admin(message):
     if not is_owner(message.from_user.id):
@@ -951,7 +1109,7 @@ def list_admins(message):
         bot.reply_to(message, "❌ Owner only command.")
         return
     
-    admins = list(admins_collection.find().sort("added_at", -1))
+    admins = list(admins_collection.find({"user_id": {"$ne": OWNER_ID}}).sort("added_at", -1))
     
     if not admins:
         bot.reply_to(message, "No admins found.")
@@ -1240,11 +1398,15 @@ def redeem_key(message):
             }}
         )
         
+        brand_msg = get_brand_message(key_data.get('generated_by'))
+        brand_suffix = f"\n\n------------------------------------------------\n📢 **Message from your Reseller:**\n{brand_msg}" if brand_msg else ""
+        
         bot.reply_to(message, 
             f"✅ **Key Redeemed Successfully!**\n\n"
             f"🔑 Key: `{key}`\n"
             f"📅 Valid Until: {expiry_readable}\n"
-            f"💡 You can now use this key to login in the APK.",
+            f"💡 You can now use this key to login in the APK."
+            f"{brand_suffix}",
             parse_mode="Markdown")
             
     except Exception as e:
@@ -1351,12 +1513,16 @@ def attack_command(message):
             response = requests.get(url, params=params, timeout=30)
             
         if response.status_code == 200 or response.status_code == 201:
+            brand_msg = get_brand_message(key_data.get('generated_by'))
+            brand_suffix = f"\n\n------------------------------------------------\n📢 **Partner Message:**\n{brand_msg}" if brand_msg else ""
+            
             bot.reply_to(message, 
                 f"🚀 **Attack Sent Successfully!**\n\n"
                 f"🎯 Target: `{ip}:{port}`\n"
                 f"⏱️ Duration: `{duration}s`\n"
                 f"💥 Status: Flooding...\n"
-                f"🔔 You will be notified when finished.",
+                f"🔔 You will be notified when finished."
+                f"{brand_suffix}",
                 parse_mode="Markdown")
             
             # Save attack to MongoDB for /active command

@@ -35,7 +35,7 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         
         // Signature Check
-        val currentSha1 = getAppSignatureSHA1()
+        /* val currentSha1 = getAppSignatureSHA1()
         Log.d("SignatureCheck", "Current SHA-1: $currentSha1")
         
         if (VALID_SHA1 == "YOUR_SHA1_HERE" || VALID_SHA1.isEmpty()) {
@@ -44,7 +44,8 @@ class LoginActivity : AppCompatActivity() {
             Toast.makeText(this, "Illegal modification detected!", Toast.LENGTH_LONG).show()
             finish()
             return
-        }
+        } */
+
 
         window.clearFlags(android.view.WindowManager.LayoutParams.FLAG_SECURE)
         setContentView(R.layout.activity_login)
