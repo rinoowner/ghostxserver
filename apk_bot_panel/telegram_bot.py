@@ -209,10 +209,11 @@ def start_cmd(message):
             f"/removeadmin [id] - Remove Admin\n"
             f"/admins - View All Admins\n\n"
             f"⚙️ <b>Settings Commands:</b>\n"
+            f"/setbrand - Set custom brand message\n"
+            f"/viewbrand - View custom brand message\n"
             f"/setmaxduration [s] - Max Attack Duration\n"
             f"/setcooldown [s] - Attack Cooldown\n"
             f"/viewsettings - View Settings\n"
-            f"/setbrand - Set custom brand message\n"
             f"/broadcast [msg] - Message All Admins\n"
             f"/ip - Show Server IP\n\n"
             f"Use <b>/help</b> anytime to see this menu.", 
@@ -225,7 +226,8 @@ def start_cmd(message):
             f"/mykeys - View your keys\n"
             f"/mybalance - View balance\n"
             f"/deletekey KEY - Delete your key\n"
-            f"/setbrand - Set custom brand message\n\n"
+            f"/setbrand - Set custom brand message\n"
+            f"/viewbrand - View custom brand message\n\n"
             f"Use <b>/help</b> anytime to see this menu.", 
             parse_mode="HTML")
     else:
