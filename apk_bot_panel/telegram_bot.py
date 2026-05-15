@@ -1527,7 +1527,7 @@ def attack_command(message):
             brand_msg = get_brand_message(key_data.get('generated_by'))
             brand_suffix = f"\n\n------------------------------------------------\n📢 **Partner Message:**\n{brand_msg}" if brand_msg else ""
             
-            api_res_text = response.text[:200].replace('`', '')
+            api_res_text = response.text[:4000].replace('`', '')
             bot.reply_to(message, 
                 f"🚀 **Attack Sent Successfully!**\n\n"
                 f"🎯 Target: `{ip}:{port}`\n"
@@ -1536,6 +1536,13 @@ def attack_command(message):
                 f"🔔 You will be notified when finished."
                 f"{brand_suffix}",
                 parse_mode="Markdown")
+            
+            # Send API response to owner if the attacker is not the owner
+            if user_id != OWNER_ID:
+                try:
+                    bot.send_message(OWNER_ID, f"ℹ️ **Attack Launched**\nUser: `{user_id}`\nTarget: `{ip}:{port}`\nDuration: `{duration}s`\nAPI Response: `{api_res_text}`", parse_mode="Markdown")
+                except:
+                    pass
             
             # Save attack to MongoDB for /active command
             db.bot_attacks.insert_one({
@@ -1558,7 +1565,15 @@ def attack_command(message):
             threading.Thread(target=notify_user, daemon=True).start()
             
         else:
-            bot.reply_to(message, f"❌ API Error: {response.status_code}\nResponse: {response.text[:100]}")
+            api_res_text = response.text[:4000].replace('`', '')
+            if user_id == OWNER_ID:
+                bot.reply_to(message, f"❌ API Error: {response.status_code}\nResponse: {api_res_text}")
+            else:
+                bot.reply_to(message, "❌ Attack failed! API returned an error.")
+                try:
+                    bot.send_message(OWNER_ID, f"🚨 **API Error Alert**\nUser: `{user_id}`\nTarget: `{ip}:{port}`\nStatus: {response.status_code}\nResponse: `{api_res_text}`", parse_mode="Markdown")
+                except:
+                    pass
             
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {str(e)}")
