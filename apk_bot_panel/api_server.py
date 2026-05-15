@@ -52,7 +52,22 @@ except Exception as e:
     log(f"❌ MongoDB connection failed: {e}", "ERROR")
     exit(1)
 
-# Telegram Bot auto-start removed. It is now handled by the Procfile worker.
+# ========== START TELEGRAM BOT IN BACKGROUND ==========
+def run_telegram_bot():
+    """Run telegram_bot.py"""
+    import subprocess
+    import sys
+    while True:
+        try:
+            log("🤖 Starting Telegram Bot...")
+            subprocess.run([sys.executable, 'telegram_bot.py'], check=True)
+        except Exception as e:
+            log(f"❌ Telegram Bot crashed: {e}. Restarting in 5 seconds...", "ERROR")
+            time.sleep(5)
+
+bot_thread = threading.Thread(target=run_telegram_bot, daemon=True)
+bot_thread.start()
+log("✅ Telegram Bot thread started")
 
 # ========== SETTINGS MANAGEMENT ==========
 MIN_ATTACK_TIME = 1
