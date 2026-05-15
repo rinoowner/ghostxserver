@@ -14,7 +14,7 @@ object ApiClient {
     
     // ========== PRODUCTION URL ==========
     private fun getBaseUrl(): String {
-        return "https://ghostfree-production.up.railway.app"
+        return "https://ghostxserver-prod.up.railway.app"
 
     }
     

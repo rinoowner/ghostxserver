@@ -1429,16 +1429,25 @@ def attack_command(message):
         port = parts[2]
         duration = parts[3]
         
-        # Find key redeemed by this user
-        key_data = keys_collection.find_one({"redeemed_by": user_id, "is_active": 1})
+        now = int(time.time() * 1000)
+        # Find key redeemed by this user that is still valid
+        key_data = keys_collection.find_one({
+            "redeemed_by": user_id,
+            "is_active": 1,
+            "expiry_at": {"$gt": now}
+        })
         
         if not key_data:
-            bot.reply_to(message, "❌ You don't have an active key! Redeem a key first.")
-            return
-            
-        now = int(time.time() * 1000)
-        if key_data.get('expiry_at', 0) < now:
-            bot.reply_to(message, "❌ Your key has expired!")
+            # Check if they have an expired key to give a better message
+            expired_key = keys_collection.find_one({
+                "redeemed_by": user_id,
+                "is_active": 1,
+                "expiry_at": {"$lte": now}
+            })
+            if expired_key:
+                bot.reply_to(message, "❌ Your key has expired! Redeem a new key.")
+            else:
+                bot.reply_to(message, "❌ You don't have an active key! Redeem a key first.")
             return
             
         # Check cooldown
