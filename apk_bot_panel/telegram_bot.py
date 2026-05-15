@@ -1527,11 +1527,13 @@ def attack_command(message):
             brand_msg = get_brand_message(key_data.get('generated_by'))
             brand_suffix = f"\n\n------------------------------------------------\n📢 **Partner Message:**\n{brand_msg}" if brand_msg else ""
             
+            api_res_text = response.text[:200].replace('`', '')
             bot.reply_to(message, 
                 f"🚀 **Attack Sent Successfully!**\n\n"
                 f"🎯 Target: `{ip}:{port}`\n"
                 f"⏱️ Duration: `{duration}s`\n"
                 f"💥 Status: Flooding...\n"
+                f"📝 **API Response:** `{api_res_text}`\n"
                 f"🔔 You will be notified when finished."
                 f"{brand_suffix}",
                 parse_mode="Markdown")
