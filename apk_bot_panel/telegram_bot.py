@@ -1581,7 +1581,48 @@ def active_command(message):
             remaining = int((attack["expiry"] - now) / 1000)
             response += f"{i}. 🎯 `{attack['ip']}:{attack['port']}`\n   ⏳ Remaining: `{remaining}s`\n\n"
             
-        bot.reply_to(message, response, parse_mode="Markdown")
+        sent_msg = bot.reply_to(message, response, parse_mode="Markdown")
+        
+        # Start a thread to update the countdown
+        def update_countdown():
+            try:
+                while True:
+                    time.sleep(5) # Update every 5 seconds
+                    current_now = int(time.time() * 1000)
+                    current_attacks = list(db.bot_attacks.find({"user_id": user_id, "expiry": {"$gt": current_now}}))
+                    
+                    if not current_attacks:
+                        try:
+                            bot.edit_message_text(
+                                "✅ **All attacks finished!**",
+                                chat_id=message.chat.id,
+                                message_id=sent_msg.message_id,
+                                parse_mode="Markdown"
+                            )
+                        except:
+                            pass
+                        break
+                        
+                    new_response = "🚀 **Your Active Attacks:**\n\n"
+                    for i, attack in enumerate(current_attacks, 1):
+                        remaining = int((attack["expiry"] - current_now) / 1000)
+                        new_response += f"{i}. 🎯 `{attack['ip']}:{attack['port']}`\n   ⏳ Remaining: `{remaining}s`\n\n"
+                    
+                    try:
+                        bot.edit_message_text(
+                            new_response,
+                            chat_id=message.chat.id,
+                            message_id=sent_msg.message_id,
+                            parse_mode="Markdown"
+                        )
+                    except Exception as e:
+                        if "message is not modified" not in str(e):
+                            pass
+                            
+            except Exception as e:
+                print(f"Error in update_countdown: {e}")
+                
+        threading.Thread(target=update_countdown, daemon=True).start()
         
     except Exception as e:
         bot.reply_to(message, f"❌ Error: {str(e)}")
