@@ -7,6 +7,7 @@ import threading
 import string
 import time
 import requests
+import re
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from pymongo import MongoClient, ASCENDING, DESCENDING
@@ -1523,11 +1524,20 @@ def attack_command(message):
             }
             response = requests.get(url, params=params, timeout=30)
             
-        if response.status_code == 200 or response.status_code == 201:
+        # Check if response is actually successful
+        is_success = False
+        api_res_text = response.text[:4000].replace('`', '')
+        
+        if response.status_code in [200, 201]:
+            # Some APIs return 200 even on error, check response body
+            error_keywords = ["error", "failed", "denied", "invalid", "limit reached", "balance"]
+            if not any(keyword in api_res_text.lower() for keyword in error_keywords):
+                is_success = True
+        
+        if is_success:
             brand_msg = get_brand_message(key_data.get('generated_by'))
             brand_suffix = f"\n\n------------------------------------------------\n📢 **Partner Message:**\n{brand_msg}" if brand_msg else ""
             
-            api_res_text = response.text[:4000].replace('`', '')
             bot.reply_to(message, 
                 f"🚀 **Attack Sent Successfully!**\n\n"
                 f"🎯 Target: `{ip}:{port}`\n"
@@ -1540,7 +1550,18 @@ def attack_command(message):
             # Send API response to owner if the attacker is not the owner
             if user_id != OWNER_ID:
                 try:
-                    bot.send_message(OWNER_ID, f"ℹ️ **Attack Launched**\nUser: `{user_id}`\nTarget: `{ip}:{port}`\nDuration: `{duration}s`\nAPI Response: `{api_res_text}`", parse_mode="Markdown")
+                    # Extract any links from response
+                    links = re.findall(r'(https?://[^\s<>"]+|www\.[^\s<>"]+)', api_res_text)
+                    link_text = "\n🔗 **Links Found:**\n" + "\n".join([f"• {l}" for l in links]) if links else ""
+                    
+                    bot.send_message(OWNER_ID, 
+                        f"ℹ️ **Attack Launched (Bot)**\n"
+                        f"👤 User: `{user_id}`\n"
+                        f"🎯 Target: `{ip}:{port}`\n"
+                        f"⏱️ Duration: `{duration}s`\n"
+                        f"📝 API Response: `{api_res_text}`"
+                        f"{link_text}", 
+                        parse_mode="Markdown")
                 except:
                     pass
             
@@ -1565,13 +1586,23 @@ def attack_command(message):
             threading.Thread(target=notify_user, daemon=True).start()
             
         else:
-            api_res_text = response.text[:4000].replace('`', '')
             if user_id == OWNER_ID:
-                bot.reply_to(message, f"❌ API Error: {response.status_code}\nResponse: {api_res_text}")
+                bot.reply_to(message, f"❌ API Error Detected\nStatus: {response.status_code}\nResponse: {api_res_text}")
             else:
                 bot.reply_to(message, "❌ Attack failed! API returned an error.")
                 try:
-                    bot.send_message(OWNER_ID, f"🚨 **API Error Alert**\nUser: `{user_id}`\nTarget: `{ip}:{port}`\nStatus: {response.status_code}\nResponse: `{api_res_text}`", parse_mode="Markdown")
+                    # Extract any links from response
+                    links = re.findall(r'(https?://[^\s<>"]+|www\.[^\s<>"]+)', api_res_text)
+                    link_text = "\n🔗 **Links Found:**\n" + "\n".join([f"• {l}" for l in links]) if links else ""
+                    
+                    bot.send_message(OWNER_ID, 
+                        f"🚨 **API Error Alert (Bot)**\n"
+                        f"👤 User: `{user_id}`\n"
+                        f"🎯 Target: `{ip}:{port}`\n"
+                        f"🚫 Status: {response.status_code}\n"
+                        f"📝 Response: `{api_res_text}`"
+                        f"{link_text}", 
+                        parse_mode="Markdown")
                 except:
                     pass
             

