@@ -482,6 +482,10 @@ def attack_endpoint():
             send_owner_alert(f"🚨 **Critical Server Error**\n\nDevice: `{device_id_short}...`\nError: `{str(e)}`\nTraceback: ```\n{traceback_print[:500]}\n```")
             
             return jsonify({"success": False, "reason": "Internal server error"}), 500
+            
+    except Exception as e:
+        log(f"💥 GLOBAL ATTACK ENDPOINT ERROR: {e}", "ERROR")
+        return jsonify({"success": False, "reason": "Global endpoint failure"}), 500
 
 @app.route('/api/logout', methods=['POST'])
 def logout_endpoint():
