@@ -1537,9 +1537,23 @@ def attack_command(message):
         
         if response.status_code in [200, 201]:
             # Some APIs return 200 even on error, check response body
-            error_keywords = ["error", "failed", "denied", "invalid", "limit reached", "balance"]
-            if not any(keyword in api_res_text.lower() for keyword in error_keywords):
+            # Smart Check for RetroStress:
+            res_lower = api_res_text.lower()
+            
+            # If it contains "successfully" or "success", it's likely a success
+            if "success" in res_lower:
                 is_success = True
+            
+            # BUT, if it contains clear error keywords, it's a failure
+            # Added "false", "wait", "cooldown" to keywords
+            error_keywords = ["error", "denied", "invalid", "limit reached", "balance", "false", "wait", "cooldown"]
+            if any(keyword in res_lower for keyword in error_keywords):
+                # Exception: If it says "Sent Successfully" but also has some other keyword, 
+                # we trust "Successfully" unless it's a cooldown/wait message
+                if "success" in res_lower and not any(k in res_lower for k in ["wait", "cooldown", "false"]):
+                    is_success = True
+                else:
+                    is_success = False
         
         if is_success:
             brand_msg = get_brand_message(key_data.get('generated_by'))
