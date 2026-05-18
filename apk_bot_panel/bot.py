@@ -3,6 +3,12 @@ import os
 import threading
 import sys
 
+# Automatically change working directory to the script's folder to ensure
+# relative paths and subprocess launches of free_server.py/telegram_bot.py work perfectly.
+script_dir = os.path.dirname(os.path.abspath(__file__))
+if script_dir:
+    os.chdir(script_dir)
+
 def run_api_server():
     """Run api_server.py"""
     import subprocess
