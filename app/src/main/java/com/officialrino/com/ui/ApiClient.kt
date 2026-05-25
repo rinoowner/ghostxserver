@@ -31,11 +31,11 @@ object ApiClient {
         ) ?: "unknown"
     }
     
-    suspend fun verifyKey(key: String): VerificationResult = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    suspend fun verifyKey(key: String, deviceId: String): VerificationResult = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val baseUrl = getBaseUrl()
         val json = JSONObject().apply {
             put("key", key)
-            put("device_id", "apk_device")
+            put("device_id", deviceId)
         }
         
         val mediaType = "application/json".toMediaTypeOrNull()
@@ -65,11 +65,11 @@ object ApiClient {
         }
     }
     
-    suspend fun startAttack(key: String, ip: String, port: Int, duration: Int): AttackResult = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+    suspend fun startAttack(key: String, deviceId: String, ip: String, port: Int, duration: Int): AttackResult = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
         val baseUrl = getBaseUrl()
         val json = JSONObject().apply {
             put("key", key)
-            put("device_id", "apk_device")
+            put("device_id", deviceId)
             put("ip", ip)
             put("port", port)
             put("duration", duration)

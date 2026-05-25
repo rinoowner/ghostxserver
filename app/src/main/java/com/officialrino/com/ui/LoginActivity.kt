@@ -133,7 +133,8 @@ class LoginActivity : AppCompatActivity() {
         webView.evaluateJavascript("document.getElementById('status_msg').innerText = '> ESTABLISHING_CONNECTION...'", null)
         
         CoroutineScope(Dispatchers.IO).launch {
-            val result = ApiClient.verifyKey(key)
+            val deviceId = ApiClient.getDeviceId(this@LoginActivity)
+            val result = ApiClient.verifyKey(key, deviceId)
             
             withContext(Dispatchers.Main) {
                 if (result.success) {

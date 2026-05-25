@@ -236,7 +236,8 @@ class FloatingWindowService : Service() {
         showGlobalToast("INITIATING ATTACK...")
 
         serviceScope.launch {
-            val result = ApiClient.startAttack(key, ip, port, selectedDuration)
+            val deviceId = ApiClient.getDeviceId(this@FloatingWindowService)
+            val result = ApiClient.startAttack(key, deviceId, ip, port, selectedDuration)
             executeButton.isEnabled = true
             executeButton.text = "START ATTACK"
             if (result.success) {
