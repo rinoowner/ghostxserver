@@ -1297,10 +1297,10 @@ def ip_command(message):
     
     bot.reply_to(message, response, parse_mode="Markdown")
 
-# ========== BROADCAST TO ADMINS (OWNER ONLY) ==========
+# ========== BROADCAST TO ALL USERS (OWNER ONLY) ==========
 
 @bot.message_handler(commands=['broadcast'])
-def broadcast_to_admins(message):
+def broadcast_to_all(message):
     user_id = message.from_user.id
     
     # Check if user is owner
@@ -1316,40 +1316,53 @@ def broadcast_to_admins(message):
     
     broadcast_msg = parts[1]
     
-    # Get all admins from database
-    all_admins = list(admins_collection.find({}, {"user_id": 1}))
+    # Get all unique users from different collections
+    all_user_ids = set()
     
-    if not all_admins:
-        bot.reply_to(message, "❌ No admins found in database.")
+    # 1. Add all admins
+    for admin in admins_collection.find({}, {"user_id": 1}):
+        if "user_id" in admin and admin["user_id"]:
+            all_user_ids.add(admin["user_id"])
+            
+    # 2. Add all users who have redeemed keys
+    for key in keys_collection.find({"is_redeemed": 1}, {"redeemed_by": 1}):
+        if "redeemed_by" in key and key["redeemed_by"]:
+            all_user_ids.add(key["redeemed_by"])
+            
+    # 3. Add all users who have ever launched an attack
+    for attack in db.bot_attacks.find({}, {"user_id": 1}):
+        if "user_id" in attack and attack["user_id"]:
+            all_user_ids.add(attack["user_id"])
+            
+    # 4. Also add owner
+    all_user_ids.add(OWNER_ID)
+    
+    user_ids = list(all_user_ids)
+    
+    if not user_ids:
+        bot.reply_to(message, "❌ No users found in database.")
         return
-    
-    # Get admin IDs
-    admin_ids = [admin["user_id"] for admin in all_admins]
-    
-    # Also send to owner
-    if OWNER_ID not in admin_ids:
-        admin_ids.append(OWNER_ID)
     
     success_count = 0
     fail_count = 0
     
-    status_msg = bot.reply_to(message, f"📢 Broadcasting to {len(admin_ids)} admins...")
+    status_msg = bot.reply_to(message, f"📢 Broadcasting to {len(user_ids)} users...")
     
-    for admin_id in admin_ids:
+    for uid in user_ids:
         try:
             bot.send_message(
-                admin_id,
+                uid,
                 f"📢 **ANNOUNCEMENT FROM OWNER**\n\n{broadcast_msg}\n\n🕐 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} IST",
                 parse_mode="Markdown"
             )
             success_count += 1
-            time.sleep(0.1)
+            time.sleep(0.05) # Small delay to avoid hitting Telegram API limits
         except Exception as e:
-            print(f"Failed to send to {admin_id}: {e}")
+            # User might have blocked the bot
             fail_count += 1
     
     bot.edit_message_text(
-        f"✅ Broadcast Complete!\n\n✅ Sent to: {success_count} admins\n❌ Failed: {fail_count}",
+        f"✅ Broadcast Complete!\n\n✅ Sent to: {success_count} users\n❌ Failed: {fail_count} (Blocked/Not started bot)",
         chat_id=message.chat.id,
         message_id=status_msg.message_id
     )
