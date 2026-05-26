@@ -146,14 +146,16 @@ class LoginActivity : AppCompatActivity() {
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    val friendlyMsg = when (result.reason.lowercase().trim()) {
-                        "no key exist" -> "❌ Key doesn't exist!"
-                        "key blocked" -> "❌ Key blocked by admin!"
-                        "redeem key first in bot" -> "❌ Redeem key in Telegram bot first!"
-                        "expired key" -> "❌ Key has expired!"
-                        "max device reached" -> "❌ Device limit reached!"
-                        "connection error" -> "🔌 Connection error!"
-                        else -> "❌ Access Denied: ${result.reason.uppercase()}"
+                    val reasonClean = result.reason.lowercase().trim()
+                    val friendlyMsg = when {
+                        reasonClean == "no key exist" -> "❌ Key doesn't exist!"
+                        reasonClean == "key blocked" -> "❌ Key blocked by admin!"
+                        reasonClean == "redeem key first in bot" -> "❌ Redeem key in Telegram bot first!"
+                        reasonClean == "expired key" -> "❌ Key has expired!"
+                        reasonClean == "max device reached" -> "❌ Device limit reached!"
+                        reasonClean == "connection error" || reasonClean.contains("connection") -> "🔌 Connection error!"
+                        reasonClean.contains("server error") || reasonClean.contains("internal") -> "🔌 Server temporarily offline!"
+                        else -> "❌ Login failed! Please check your key."
                     }
                     webView.evaluateJavascript("document.getElementById('status_msg').innerText = '$friendlyMsg'", null)
                     webView.evaluateJavascript("document.getElementById('status_msg').style.color = 'red'", null)
