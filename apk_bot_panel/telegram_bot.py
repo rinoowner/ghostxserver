@@ -428,11 +428,11 @@ def generate_keys(message):
         if quantity == 1:
             key = keys_generated[0]
             response = (
-                f"✅ **Key Generated!**\n\n"
-                f"🔑 **Redeem Command:** <code>/redeem {key}</code>\n"
-                f"⏱️ **Duration:** {duration_display}\n"
-                f"📱 **Device Limit:** 1 device\n\n"
-                f"📖 **Redeem Steps:**\n"
+                f"✅ <b>Key Generated!</b>\n\n"
+                f"🔑 <b>Redeem Command:</b> <code>/redeem {key}</code>\n"
+                f"⏱️ <b>Duration:</b> {duration_display}\n"
+                f"📱 <b>Device Limit:</b> 1 device\n\n"
+                f"📖 <b>Redeem Steps:</b>\n"
                 f"1️⃣ Click/Copy the command: <code>/redeem {key}</code>\n"
                 f"2️⃣ Send command to @ghostxserverbot\n"
                 f"3️⃣ Open APK & login with key: <code>{key}</code>\n\n"
@@ -441,11 +441,11 @@ def generate_keys(message):
         else:
             key_list = "\n".join([f"<code>/redeem {k}</code>" for k in keys_generated])
             response = (
-                f"✅ **{quantity} Keys Generated!**\n\n"
-                f"🔑 **Redeem Commands:**\n{key_list}\n\n"
-                f"⏱️ **Duration:** {duration_display}\n"
-                f"📱 **Device Limit:** 1 device per key\n\n"
-                f"📖 **Redeem Steps:**\n"
+                f"✅ <b>{quantity} Keys Generated!</b>\n\n"
+                f"🔑 <b>Redeem Commands:</b>\n{key_list}\n\n"
+                f"⏱️ <b>Duration:</b> {duration_display}\n"
+                f"📱 <b>Device Limit:</b> 1 device per key\n\n"
+                f"📖 <b>Redeem Steps:</b>\n"
                 f"1️⃣ Click/Copy any command from above\n"
                 f"2️⃣ Send command to @ghostxserverbot\n"
                 f"3️⃣ Open APK & login with that key\n\n"
@@ -518,11 +518,11 @@ def generate_limited_keys(message):
         if quantity == 1:
             key = keys_generated[0]
             response = (
-                f"✅ **Key Generated!**\n\n"
-                f"🔑 **Redeem Command:** <code>/redeem {key}</code>\n"
-                f"⏱️ **Duration:** {duration_display}\n"
-                f"📱 **Device Limit:** {device_limit} device(s)\n\n"
-                f"📖 **Redeem Steps:**\n"
+                f"✅ <b>Key Generated!</b>\n\n"
+                f"🔑 <b>Redeem Command:</b> <code>/redeem {key}</code>\n"
+                f"⏱️ <b>Duration:</b> {duration_display}\n"
+                f"📱 <b>Device Limit:</b> {device_limit} device(s)\n\n"
+                f"📖 <b>Redeem Steps:</b>\n"
                 f"1️⃣ Click/Copy the command: <code>/redeem {key}</code>\n"
                 f"2️⃣ Send command to @ghostxserverbot\n"
                 f"3️⃣ Open APK & login with key: <code>{key}</code>\n\n"
@@ -531,11 +531,11 @@ def generate_limited_keys(message):
         else:
             key_list = "\n".join([f"<code>/redeem {k}</code>" for k in keys_generated])
             response = (
-                f"✅ **{quantity} Keys Generated!**\n\n"
-                f"🔑 **Redeem Commands:**\n{key_list}\n\n"
-                f"⏱️ **Duration:** {duration_display}\n"
-                f"📱 **Device Limit:** {device_limit} device(s) per key\n\n"
-                f"📖 **Redeem Steps:**\n"
+                f"✅ <b>{quantity} Keys Generated!</b>\n\n"
+                f"🔑 <b>Redeem Commands:</b>\n{key_list}\n\n"
+                f"⏱️ <b>Duration:</b> {duration_display}\n"
+                f"📱 <b>Device Limit:</b> {device_limit} device(s) per key\n\n"
+                f"📖 <b>Redeem Steps:</b>\n"
                 f"1️⃣ Click/Copy any command from above\n"
                 f"2️⃣ Send command to @ghostxserverbot\n"
                 f"3️⃣ Open APK & login with that key\n\n"

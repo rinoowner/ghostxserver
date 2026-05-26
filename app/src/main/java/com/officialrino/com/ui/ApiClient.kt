@@ -22,6 +22,12 @@ object ApiClient {
         .connectTimeout(15, TimeUnit.SECONDS)
         .writeTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor { chain ->
+            val request = chain.request().newBuilder()
+                .header("User-Agent", "Mozilla/5.0 (Linux; Android 10; Mobile) AppleWebKit/537.36")
+                .build()
+            chain.proceed(request)
+        }
         .build()
     
     fun getDeviceId(context: Context): String {
@@ -49,16 +55,21 @@ object ApiClient {
         try {
             val response = client.newCall(request).execute()
             val responseBody = response.body?.string() ?: "{}"
+            val jsonResponse = try { JSONObject(responseBody) } catch (e: Exception) { JSONObject() }
             
             if (response.isSuccessful) {
-                val jsonResponse = JSONObject(responseBody)
                 if (jsonResponse.optBoolean("success")) {
                     VerificationResult(true, "", jsonResponse.optLong("expiry"))
                 } else {
                     VerificationResult(false, jsonResponse.optString("reason"), 0)
                 }
             } else {
-                VerificationResult(false, "Server Error: ${response.code}", 0)
+                val reason = jsonResponse.optString("reason")
+                if (reason.isNotEmpty()) {
+                    VerificationResult(false, reason, 0)
+                } else {
+                    VerificationResult(false, "Server Error: ${response.code}", 0)
+                }
             }
         } catch (e: Exception) {
             VerificationResult(false, "Connection error", 0)
