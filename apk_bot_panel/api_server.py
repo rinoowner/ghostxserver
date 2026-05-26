@@ -82,23 +82,29 @@ except Exception as e:
 
 # ========== START TELEGRAM BOT IN BACKGROUND ==========
 def run_telegram_bot():
-    """Run telegram_bot.py"""
+    """Run telegram_bot.py safely in the background"""
     import subprocess
     import sys
     import os
     
+    # Wait for 3 seconds to let Gunicorn successfully boot up its master/workers without timeout
+    time.sleep(3)
+    
+    # Prevent running twice if Flask is running in debug mode (Werkzeug reloader)
+    if os.environ.get('WERKZEUG_RUN_MAIN') == 'true':
+        log("🔄 Werkzeug reloader running, skipping bot start on this thread.")
+        return
+
     # Get absolute path of telegram_bot.py relative to this file
     dir_path = os.path.dirname(os.path.abspath(__file__))
     bot_path = os.path.join(dir_path, 'telegram_bot.py')
     
-    # Kill any existing orphan telegram_bot.py process to prevent double runs (Conflict 409)
+    # Clean up duplicate processes (best effort)
     try:
         log("🧹 Cleaning up existing telegram_bot.py instances...")
         if os.name == 'posix':  # Linux (Railway)
-            subprocess.run(["pkill", "-f", "telegram_bot.py"])
-        elif os.name == 'nt':   # Windows
-            # Run taskkill or wmic to stop existing python processes running telegram_bot.py
-            subprocess.run(["taskkill", "/F", "/FI", "WINDOWTITLE eq telegram_bot.py"], capture_output=True)
+            # Find and kill any Python processes running telegram_bot.py
+            subprocess.run(["pkill", "-f", "telegram_bot.py"], capture_output=True)
     except Exception as e:
         log(f"⚠️ Clean up warning: {e}", "WARNING")
         
@@ -107,12 +113,14 @@ def run_telegram_bot():
             log("🤖 Starting Telegram Bot...")
             subprocess.run([sys.executable, bot_path], check=True)
         except Exception as e:
-            log(f"❌ Telegram Bot crashed: {e}. Restarting in 5 seconds...", "ERROR")
-            time.sleep(5)
+            log(f"❌ Telegram Bot crashed: {e}. Restarting in 8 seconds...", "ERROR")
+            time.sleep(8)
 
+# Only start the bot if we are not running Gunicorn preload or if we are the main worker
+# To keep Gunicorn happy during boot, start bot in a daemon thread with delay
 bot_thread = threading.Thread(target=run_telegram_bot, daemon=True)
 bot_thread.start()
-log("✅ Telegram Bot thread started")
+log("✅ Telegram Bot launcher thread scheduled")
 
 # ========== SETTINGS MANAGEMENT ==========
 MIN_ATTACK_TIME = 1
