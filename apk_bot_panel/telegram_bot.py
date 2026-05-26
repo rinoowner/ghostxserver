@@ -22,11 +22,12 @@ MONGODB_URI = os.getenv("MONGODB_URI")
 DATABASE_NAME = os.getenv("DATABASE_NAME")
 
 RESELLER_PRICING = {
-    "12h": 20,
-    "1d": 40,
-    "3d": 120,
-    "7d": 200,
-    "30d": 500
+    "12h": 80,
+    "1d": 150,
+    "3d": 350,
+    "7d": 500,
+    "15d": 850,
+    "30d": 1200
 }
 
 if not BOT_TOKEN:
@@ -295,24 +296,24 @@ def list_users_count(message):
         
         # Format response
         response = (
-            f"📊 **GHOST X SERVER ANALYTICS** 📊\n"
+            f"📊 <b>GHOST X SERVER ANALYTICS</b> 📊\n"
             f"━━━━━━━━━━━━━━━━━━━\n\n"
-            f"👥 **User Stats:**\n"
-            f"• Total Bot Users: `{total_users}`\n"
-            f"• Active Users (24h): `{active_users_today}`\n\n"
-            f"🔑 **Key Stats:**\n"
-            f"• Total Keys: `{total_keys}`\n"
-            f"• Redeemed Keys: `{redeemed_keys}`\n"
-            f"• Unused Keys (Ready): `{unused_keys}`\n"
-            f"• Blocked/Deleted: `{blocked_keys}`\n\n"
-            f"🚀 **Attack Stats (Bot):**\n"
-            f"• Total Attacks: `{total_bot_attacks}`\n"
-            f"• Attacks (24h): `{bot_attacks_today}`\n\n"
-            f"👥 **Admin Stats:**\n"
-            f"• Total Admins: `{total_admins}`\n\n"
-            f"⏱️ **Last Updated:** {format_expiry_ist(now)}"
+            f"👥 <b>User Stats:</b>\n"
+            f"• Total Bot Users: <code>{total_users}</code>\n"
+            f"• Active Users (24h): <code>{active_users_today}</code>\n\n"
+            f"🔑 <b>Key Stats:</b>\n"
+            f"• Total Keys: <code>{total_keys}</code>\n"
+            f"• Redeemed Keys: <code>{redeemed_keys}</code>\n"
+            f"• Unused Keys (Ready): <code>{unused_keys}</code>\n"
+            f"• Blocked/Deleted: <code>{blocked_keys}</code>\n\n"
+            f"🚀 <b>Attack Stats (Bot):</b>\n"
+            f"• Total Attacks: <code>{total_bot_attacks}</code>\n"
+            f"• Attacks (24h): <code>{bot_attacks_today}</code>\n\n"
+            f"👥 <b>Admin Stats:</b>\n"
+            f"• Total Admins: <code>{total_admins}</code>\n\n"
+            f"⏱️ <b>Last Updated:</b> {format_expiry_ist(now)}"
         )
-        bot.reply_to(message, response, parse_mode="Markdown")
+        bot.reply_to(message, response, parse_mode="HTML")
     except Exception as e:
         bot.reply_to(message, f"❌ Error retrieving analytics: {str(e)}")
 
@@ -335,20 +336,21 @@ def generate_keys(message):
             quantity = int(parts[2])
         else:
             pricing_text = (
-                "📝 **How to Generate Keys:**\n"
-                "`/gen <duration> [quantity]`\n\n"
-                "**Examples:**\n"
-                "`/gen 12h` - Generate 1 key for 12 hours\n"
-                "`/gen 1d 5` - Generate 5 keys for 1 day\n\n"
-                "💰 **Reseller Price List:**\n"
-                "• 12 Hours: 20 balance\n"
-                "• 1 Day: 40 balance\n"
-                "• 3 Days: 120 balance\n"
-                "• 7 Days: 200 balance\n"
-                "• 30 Days: 500 balance\n\n"
-                "💡 *Note:* Owner can use any custom duration (e.g., 1h, 5d)."
+                "📝 <b>How to Generate Keys:</b>\n"
+                "<code>/gen &lt;duration&gt; [quantity]</code>\n\n"
+                "<b>Examples:</b>\n"
+                "<code>/gen 12h</code> - Generate 1 key for 12 hours\n"
+                "<code>/gen 1d 5</code> - Generate 5 keys for 1 day\n\n"
+                "💰 <b>Reseller Price List:</b>\n"
+                "• 12 Hours: 80 balance\n"
+                "• 1 Day: 150 balance\n"
+                "• 3 Days: 350 balance\n"
+                "• 7 Days: 500 balance\n"
+                "• 15 Days: 850 balance\n"
+                "• 30 Days: 1200 balance\n\n"
+                "💡 <i>Note:</i> Owner can use any custom duration (e.g., 1h, 5d)."
             )
-            bot.reply_to(message, pricing_text, parse_mode="Markdown")
+            bot.reply_to(message, pricing_text, parse_mode="HTML")
             return
         
         if quantity < 1 or quantity > 100:
@@ -561,14 +563,14 @@ def make_custom_key(message):
         parts = message.text.split()
         if len(parts) != 4:
             bot.reply_to(message, 
-                "📝 **Usage:** `/makekey <key_text> <duration> <device_limit>`\n\n"
-                "**Examples:**\n"
-                "`/makekey Sparsh 24h 5` - Key: Sparsh, 24 hours, 5 devices\n"
-                "`/makekey Myname 2d 10` - Key: Myname, 2 days, 10 devices\n"
-                "`/makekey Test 30m 3` - Key: Test, 30 minutes, 3 devices\n\n"
-                "⚠️ **Note:** Key text can only contain letters & numbers (no spaces)\n"
+                "📝 <b>Usage:</b> <code>/makekey &lt;key_text&gt; &lt;duration&gt; &lt;device_limit&gt;</code>\n\n"
+                "<b>Examples:</b>\n"
+                "<code>/makekey Sparsh 24h 5</code> - Key: Sparsh, 24 hours, 5 devices\n"
+                "<code>/makekey Myname 2d 10</code> - Key: Myname, 2 days, 10 devices\n"
+                "<code>/makekey Test 30m 3</code> - Key: Test, 30 minutes, 3 devices\n\n"
+                "⚠️ <b>Note:</b> Key text can only contain letters & numbers (no spaces)\n"
                 "Keys are case-sensitive - use exactly as entered!",
-                parse_mode="Markdown")
+                parse_mode="HTML")
             return
         
         key_text = parts[1]
@@ -623,19 +625,19 @@ def make_custom_key(message):
         duration_display = duration_str.lower()
         
         response = (
-            f"✅ **Custom Key Created!**\n\n"
-            f"🔑 **Redeem Command:** `/redeem {key_text}`\n"
-            f"⏱️ **Duration:** {duration_display}\n"
-            f"📱 **Device Limit:** {device_limit} device(s)\n\n"
-            f"📖 **Redeem Steps:**\n"
-            f"1️⃣ Click/Copy command: `/redeem {key_text}`\n"
+            f"✅ <b>Custom Key Created!</b>\n\n"
+            f"🔑 <b>Redeem Command:</b> <code>/redeem {key_text}</code>\n"
+            f"⏱️ <b>Duration:</b> {duration_display}\n"
+            f"📱 <b>Device Limit:</b> {device_limit} device(s)\n\n"
+            f"📖 <b>Redeem Steps:</b>\n"
+            f"1️⃣ Click/Copy command: <code>/redeem {key_text}</code>\n"
             f"2️⃣ Send command to @ghostxserverbot\n"
-            f"3️⃣ Open APK & login using key: `{key_text}`\n\n"
-            f"💡 **Note:** Time starts when redeemed in bot.\n"
+            f"3️⃣ Open APK & login using key: <code>{key_text}</code>\n\n"
+            f"💡 <b>Note:</b> Time starts when redeemed in bot.\n"
             f"⚠️ Key is case-sensitive – use exactly as shown."
         )
         
-        bot.reply_to(message, response, parse_mode="Markdown")
+        bot.reply_to(message, response, parse_mode="HTML")
         
     except ValueError:
         bot.reply_to(message, "❌ Invalid device limit! Please enter a number.")
@@ -656,8 +658,8 @@ def my_keys(message):
     
     admin_data = admins_collection.find_one({"user_id": user_id})
     balance = admin_data.get('balance', 0) if admin_data else 0
-    response = f"💰 **Your Balance:** {balance}\n"
-    response += "🔑 **Your Keys:**\n\n"
+    response = f"💰 <b>Your Balance:</b> {balance}\n"
+    response += "🔑 <b>Your Keys:</b>\n\n"
     
     for data in keys:
         key = data.get('key')
@@ -696,7 +698,7 @@ def my_balance(message):
     admin_data = admins_collection.find_one({"user_id": user_id})
     balance = admin_data.get('balance', 0) if admin_data else 0
     
-    bot.reply_to(message, f"💰 **Your Current Balance:** {balance}", parse_mode="Markdown")
+    bot.reply_to(message, f"💰 <b>Your Current Balance:</b> {balance}", parse_mode="HTML")
 
 # ========== DELETE KEY (Single) ==========
 
