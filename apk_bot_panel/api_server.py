@@ -37,6 +37,14 @@ if not RETROSTRESS_API_KEY:
     log("❌ ERROR: RETROSTRESS_API_KEY not set!", "ERROR")
     exit(1)
 
+if not BOT_TOKEN:
+    log("❌ ERROR: BOT_TOKEN not set!", "ERROR")
+    exit(1)
+else:
+    # Print masked token to debug what value Railway is actually reading
+    masked = BOT_TOKEN[:4] + "..." + BOT_TOKEN[-4:] if len(BOT_TOKEN) > 8 else "too_short"
+    log(f"📋 Loaded BOT_TOKEN: {masked} (Length: {len(BOT_TOKEN)})")
+
 if not MONGODB_URI:
     log("❌ ERROR: MONGODB_URI not set!", "ERROR")
     exit(1)
