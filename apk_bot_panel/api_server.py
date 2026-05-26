@@ -77,10 +77,27 @@ def run_telegram_bot():
     """Run telegram_bot.py"""
     import subprocess
     import sys
+    import os
+    
+    # Get absolute path of telegram_bot.py relative to this file
+    dir_path = os.path.dirname(os.path.abspath(__file__))
+    bot_path = os.path.join(dir_path, 'telegram_bot.py')
+    
+    # Kill any existing orphan telegram_bot.py process to prevent double runs (Conflict 409)
+    try:
+        log("🧹 Cleaning up existing telegram_bot.py instances...")
+        if os.name == 'posix':  # Linux (Railway)
+            subprocess.run(["pkill", "-f", "telegram_bot.py"])
+        elif os.name == 'nt':   # Windows
+            # Run taskkill or wmic to stop existing python processes running telegram_bot.py
+            subprocess.run(["taskkill", "/F", "/FI", "WINDOWTITLE eq telegram_bot.py"], capture_output=True)
+    except Exception as e:
+        log(f"⚠️ Clean up warning: {e}", "WARNING")
+        
     while True:
         try:
             log("🤖 Starting Telegram Bot...")
-            subprocess.run([sys.executable, 'telegram_bot.py'], check=True)
+            subprocess.run([sys.executable, bot_path], check=True)
         except Exception as e:
             log(f"❌ Telegram Bot crashed: {e}. Restarting in 5 seconds...", "ERROR")
             time.sleep(5)
