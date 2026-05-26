@@ -64,17 +64,27 @@ class FloatingWindowService : Service() {
         }
 
         val density = resources.displayMetrics.density
+        
+        // ========== BAN FIX MEOW x095e69 3D ==========
         params = WindowManager.LayoutParams(
             (300 * density).toInt(),
             WindowManager.LayoutParams.WRAP_CONTENT,
             layoutType,
-            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+            WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+            WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH,
             PixelFormat.TRANSLUCENT
         )
+        // =========================================
 
         params.gravity = Gravity.TOP or Gravity.START
         params.x = 100
         params.y = 100
+
+        // Add cutout mode for Android 10+ (BAN x08e675 FIX)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            params.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER
+        }
 
         windowManager.addView(floatingView, params)
 

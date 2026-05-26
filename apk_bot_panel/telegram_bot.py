@@ -187,6 +187,25 @@ def get_server_ip():
 def start_cmd(message):
     user_id = message.from_user.id
     
+    # Save user to database if not exists
+    try:
+        users_collection.update_one(
+            {"user_id": user_id},
+            {
+                "$set": {
+                    "username": message.from_user.username,
+                    "first_name": message.from_user.first_name,
+                    "last_active": int(time.time() * 1000)
+                },
+                "$setOnInsert": {
+                    "started_at": int(time.time() * 1000)
+                }
+            },
+            upsert=True
+        )
+    except Exception as e:
+        print(f"Error saving user: {e}")
+    
     if is_owner(user_id):
         bot.reply_to(message,
             f"👋 <b>Welcome Owner!</b>\n\n"
@@ -208,7 +227,8 @@ def start_cmd(message):
             f"👥 <b>Admin Commands:</b>\n"
             f"/addadmin [id] - Add Admin\n"
             f"/removeadmin [id] - Remove Admin\n"
-            f"/admins - View All Admins\n\n"
+            f"/admins - View All Admins\n"
+            f"/users - View Total Users\n\n"
             f"⚙️ <b>Settings Commands:</b>\n"
             f"/setbrand - Set custom brand message\n"
             f"/viewbrand - View custom brand message\n"
@@ -244,6 +264,57 @@ def start_cmd(message):
 @bot.message_handler(commands=['help'])
 def help_cmd(message):
     start_cmd(message)
+
+@bot.message_handler(commands=['users'])
+def list_users_count(message):
+    user_id = message.from_user.id
+    if not is_owner(user_id):
+        bot.reply_to(message, "❌ Unauthorized (Owner Only)")
+        return
+        
+    try:
+        now = int(time.time() * 1000)
+        one_day_ago = now - (24 * 60 * 60 * 1000)
+        
+        # User Stats
+        total_users = users_collection.count_documents({})
+        active_users_today = users_collection.count_documents({"last_active": {"$gt": one_day_ago}})
+        
+        # Key Stats
+        total_keys = keys_collection.count_documents({})
+        redeemed_keys = keys_collection.count_documents({"is_redeemed": 1})
+        unused_keys = keys_collection.count_documents({"is_redeemed": 0, "is_active": 1})
+        blocked_keys = keys_collection.count_documents({"is_active": 0})
+        
+        # Attack Stats
+        total_bot_attacks = db.bot_attacks.count_documents({})
+        bot_attacks_today = db.bot_attacks.count_documents({"start_time": {"$gt": one_day_ago}})
+        
+        # Admin Stats
+        total_admins = admins_collection.count_documents({})
+        
+        # Format response
+        response = (
+            f"📊 **GHOST X SERVER ANALYTICS** 📊\n"
+            f"━━━━━━━━━━━━━━━━━━━\n\n"
+            f"👥 **User Stats:**\n"
+            f"• Total Bot Users: `{total_users}`\n"
+            f"• Active Users (24h): `{active_users_today}`\n\n"
+            f"🔑 **Key Stats:**\n"
+            f"• Total Keys: `{total_keys}`\n"
+            f"• Redeemed Keys: `{redeemed_keys}`\n"
+            f"• Unused Keys (Ready): `{unused_keys}`\n"
+            f"• Blocked/Deleted: `{blocked_keys}`\n\n"
+            f"🚀 **Attack Stats (Bot):**\n"
+            f"• Total Attacks: `{total_bot_attacks}`\n"
+            f"• Attacks (24h): `{bot_attacks_today}`\n\n"
+            f"👥 **Admin Stats:**\n"
+            f"• Total Admins: `{total_admins}`\n\n"
+            f"⏱️ **Last Updated:** {format_expiry_ist(now)}"
+        )
+        bot.reply_to(message, response, parse_mode="Markdown")
+    except Exception as e:
+        bot.reply_to(message, f"❌ Error retrieving analytics: {str(e)}")
 
 # ========== KEY GENERATION ==========
 
@@ -357,20 +428,27 @@ def generate_keys(message):
         if quantity == 1:
             key = keys_generated[0]
             response = (
-                f"✅ Key Generated!\n\n"
-                f"🔑 Redeem Command: <code>/redeem {key}</code>\n"
-                f"⏱️ Duration: {duration_display}\n"
-                f"📱 Device Limit: 1 device\n\n"
+                f"✅ **Key Generated!**\n\n"
+                f"🔑 **Redeem Command:** <code>/redeem {key}</code>\n"
+                f"⏱️ **Duration:** {duration_display}\n"
+                f"📱 **Device Limit:** 1 device\n\n"
+                f"📖 **Redeem Steps:**\n"
+                f"1️⃣ Click/Copy the command: <code>/redeem {key}</code>\n"
+                f"2️⃣ Send command to @ghostxserverbot\n"
+                f"3️⃣ Open APK & login with key: <code>{key}</code>\n\n"
                 f"💡 Note: Time starts when redeemed in bot."
             )
         else:
             key_list = "\n".join([f"<code>/redeem {k}</code>" for k in keys_generated])
             response = (
-                f"✅ {quantity} Keys Generated!\n\n"
-                f"🔑 Redeem Commands:\n{key_list}\n\n"
-                f"⏱️ Duration: {duration_display}\n"
-                f"📱 Device Limit: 1 device per key\n"
-                f"Unused keys auto-delete after 7 days.\n\n"
+                f"✅ **{quantity} Keys Generated!**\n\n"
+                f"🔑 **Redeem Commands:**\n{key_list}\n\n"
+                f"⏱️ **Duration:** {duration_display}\n"
+                f"📱 **Device Limit:** 1 device per key\n\n"
+                f"📖 **Redeem Steps:**\n"
+                f"1️⃣ Click/Copy any command from above\n"
+                f"2️⃣ Send command to @ghostxserverbot\n"
+                f"3️⃣ Open APK & login with that key\n\n"
                 f"💡 Note: Time starts when redeemed in bot."
             )
         
@@ -440,20 +518,27 @@ def generate_limited_keys(message):
         if quantity == 1:
             key = keys_generated[0]
             response = (
-                f"✅ Key Generated!\n\n"
-                f"🔑 Redeem Command: <code>/redeem {key}</code>\n"
-                f"⏱️ Duration: {duration_display}\n"
-                f"📱 Device Limit: {device_limit} device(s)\n\n"
+                f"✅ **Key Generated!**\n\n"
+                f"🔑 **Redeem Command:** <code>/redeem {key}</code>\n"
+                f"⏱️ **Duration:** {duration_display}\n"
+                f"📱 **Device Limit:** {device_limit} device(s)\n\n"
+                f"📖 **Redeem Steps:**\n"
+                f"1️⃣ Click/Copy the command: <code>/redeem {key}</code>\n"
+                f"2️⃣ Send command to @ghostxserverbot\n"
+                f"3️⃣ Open APK & login with key: <code>{key}</code>\n\n"
                 f"💡 Note: Time starts when redeemed in bot."
             )
         else:
             key_list = "\n".join([f"<code>/redeem {k}</code>" for k in keys_generated])
             response = (
-                f"✅ {quantity} Keys Generated!\n\n"
-                f"🔑 Redeem Commands:\n{key_list}\n\n"
-                f"⏱️ Duration: {duration_display}\n"
-                f"📱 Device Limit: {device_limit} device(s) per key\n"
-                f"Unused keys auto-delete after 7 days.\n\n"
+                f"✅ **{quantity} Keys Generated!**\n\n"
+                f"🔑 **Redeem Commands:**\n{key_list}\n\n"
+                f"⏱️ **Duration:** {duration_display}\n"
+                f"📱 **Device Limit:** {device_limit} device(s) per key\n\n"
+                f"📖 **Redeem Steps:**\n"
+                f"1️⃣ Click/Copy any command from above\n"
+                f"2️⃣ Send command to @ghostxserverbot\n"
+                f"3️⃣ Open APK & login with that key\n\n"
                 f"💡 Note: Time starts when redeemed in bot."
             )
         
@@ -542,6 +627,10 @@ def make_custom_key(message):
             f"🔑 **Redeem Command:** `/redeem {key_text}`\n"
             f"⏱️ **Duration:** {duration_display}\n"
             f"📱 **Device Limit:** {device_limit} device(s)\n\n"
+            f"📖 **Redeem Steps:**\n"
+            f"1️⃣ Click/Copy command: `/redeem {key_text}`\n"
+            f"2️⃣ Send command to @ghostxserverbot\n"
+            f"3️⃣ Open APK & login using key: `{key_text}`\n\n"
             f"💡 **Note:** Time starts when redeemed in bot.\n"
             f"⚠️ Key is case-sensitive – use exactly as shown."
         )

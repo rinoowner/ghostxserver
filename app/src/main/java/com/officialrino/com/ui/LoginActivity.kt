@@ -146,12 +146,20 @@ class LoginActivity : AppCompatActivity() {
                     startActivity(Intent(this@LoginActivity, MainActivity::class.java))
                     finish()
                 } else {
-                    val errorMsg = "[X] ACCESS_DENIED: ${result.reason.uppercase()}"
-                    webView.evaluateJavascript("document.getElementById('status_msg').innerText = '$errorMsg'", null)
+                    val friendlyMsg = when (result.reason.lowercase().trim()) {
+                        "no key exist" -> "❌ Key doesn't exist!"
+                        "key blocked" -> "❌ Key blocked by admin!"
+                        "redeem key first in bot" -> "❌ Redeem key in Telegram bot first!"
+                        "expired key" -> "❌ Key has expired!"
+                        "max device reached" -> "❌ Device limit reached!"
+                        "connection error" -> "🔌 Connection error!"
+                        else -> "❌ Access Denied: ${result.reason.uppercase()}"
+                    }
+                    webView.evaluateJavascript("document.getElementById('status_msg').innerText = '$friendlyMsg'", null)
                     webView.evaluateJavascript("document.getElementById('status_msg').style.color = 'red'", null)
                     webView.evaluateJavascript("hideLoading()", null)
                     
-                    if (result.reason.contains("expired")) {
+                    if (result.reason.contains("expired") || result.reason.lowercase().trim() == "no key exist" || result.reason.lowercase().trim() == "key blocked") {
                         sharedPrefs.edit().remove(SAVED_KEY).remove(SAVED_EXPIRY).apply()
                     }
                 }
